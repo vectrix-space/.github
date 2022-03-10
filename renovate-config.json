@@ -1,0 +1,64 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Shared renovate settings for vectrix.space projects",
+  "extends": [
+    "config:base"
+  ],
+  "labels": [
+    "type: dependencies"
+  ],
+  "schedule": [
+    "after 5pm on the 2nd day of the month"
+  ],
+  "packageRules": [
+    {
+      "matchSourceUrlPrefixes": [
+        "https://github.com/google/error-prone"
+      ],
+      "groupName": "error-prone monorepo"
+    },
+    {
+      "matchPackagePrefixes": [
+        "com.google.auto.value:"
+      ],
+      "groupName": "auto-value monorepo"
+    },
+    {
+      "matchPackagePrefixes": [
+        "com.google.guava:"
+      ],
+      "versioning": "regex:^(?<major>\\d+)(\\.(?<minor>\\d+))?(\\.(?<patch>\\d+))?(-(?<compatibility>.*))?$"
+    },
+    {
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "excludePackageNames": [
+        "gradle"
+      ],
+      "groupName": "patch-release dependency changes"
+    },
+    {
+      "matchManagers": [
+        "github-actions",
+        "gradle-wrapper"
+      ],
+      "groupName": "gradle and github actions"
+    },
+    {
+      "matchDepTypes": [
+        "plugin"
+      ],
+      "groupName": "gradle and github actions"
+    },
+    {
+      "matchPaths": [
+        "build-logic/*"
+      ],
+      "groupName": "gradle and github actions"
+    }
+  ],
+  "prHourlyLimit": 4,
+  "semanticCommitType": "build",
+  "commitMessagePrefix": "chore(deps): "
+}
