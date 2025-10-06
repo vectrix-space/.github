@@ -106,13 +106,13 @@ jobs:
       contents: "write"
     steps:
       - name: "check branch for publish"
-        uses: "KyoriPowered/action-regex-match@1ff8ef914f6762fff8d5efd8d56ef88b5be5dd5c" # v4.0.0
+        uses: "KyoriPowered/action-regex-match@5684ded1f3e016437483d3d74cfa93fcdf5e313b" # v5.0.0
         id: "branch-name"
         with:
           text: "${{ github.ref }}"
           regex: "^refs/heads/(?:${{ inputs.publishing_branch_regex }})$" # master or something like 0.8.x or 2.x
       - name: "submit dependency graph"
-        uses: "gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a" # v4.4.3
+        uses: "gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2" # v5.0.0
         if: steps.branch-name.outputs.match != ''
         with:
           dependency-graph: "download-and-submit"
