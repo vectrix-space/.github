@@ -23,11 +23,21 @@ on:
         required: false
         type: string
         default: ''
+      gradle_release_publish_tasks:
+        description: 'Extra tasks to pass to the Gradle invocation that publishes releases of this project'
+        required: false
+        type: string
+        default: 'publishToSonatype closeAndReleaseSonatypeStagingRepository'
       gradle_warning_mode:
         description: 'Warning mode to set on Gradle executions'
         required: false
         type: string
         default: 'fail'
+      publish_releases:
+        description: 'Whether to publish releases of this project. The gradle_release_publish_params input must be provided when publishing to anything but Sonatype Central'
+        required: false
+        type: boolean
+        default: false
     secrets:
       SONATYPE_USERNAME:
         description: 'vectrix.space OSSRH Username'
@@ -49,6 +59,7 @@ concurrency:
 permissions:
   actions: "write"
   contents: "read"
+  id-token: "write"
 
 jobs:
   build:
@@ -88,9 +99,15 @@ jobs:
           else
             echo "STATUS=release" >> $GITHUB_ENV
           fi
-      - name: "publish"
+      - name: "publish snapshot"
         if: "${{ runner.os == 'Linux' && env.STATUS != 'release' && github.event_name == 'push' && steps.setup.outputs.publishing_branch != '' }}"
         run: "./gradlew ${{ inputs.extra_gradle_params }} publish ${{ inputs.extra_gradle_publish_params }}"
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
+          ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
+      - name: "publish release"
+        if: "${{ inputs.publish_releases && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
+        run: "./gradlew ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}"
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
           ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
