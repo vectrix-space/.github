@@ -129,7 +129,7 @@ jobs:
           text: "${{ github.ref }}"
           regex: "^refs/heads/(?:${{ inputs.publishing_branch_regex }})$" # master or something like 0.8.x or 2.x
       - name: "submit dependency graph"
-        uses: "gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2" # v5.0.0
+        uses: "gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c" # v5.0.2
         if: steps.branch-name.outputs.match != ''
         with:
           dependency-graph: "download-and-submit"
