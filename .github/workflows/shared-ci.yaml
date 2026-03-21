@@ -4,52 +4,57 @@ on:
   workflow_call:
     inputs:
       runtime_version:
-        description: 'The default Java runtime version to run builds on'
+        description: "The default Java runtime version to run builds on"
         required: false
         type: number
         default: 17
       publishing_branch_regex:
-        description: 'The regular expression to determine if a certain branch build should be published'
+        description: "The regular expression to determine if a certain branch build should be published"
         required: false
         type: string
         default: '(?:(?:(?:main\/)?(\d+(?:\.\d+)*(?:\.x)?)))|master|main|trunk'
       extra_gradle_params:
-        description: 'Extra arguments to pass to all Gradle invocations'
+        description: "Extra arguments to pass to all Gradle invocations"
         required: false
         type: string
-        default: ''
+        default: ""
       extra_gradle_publish_params:
-        description: 'Extra arguments to pass to the Gradle invocation that publishes this project'
+        description: "Extra arguments to pass to the Gradle invocation that publishes this project"
         required: false
         type: string
-        default: ''
+        default: ""
       gradle_release_publish_tasks:
-        description: 'Extra tasks to pass to the Gradle invocation that publishes releases of this project'
+        description: "Extra tasks to pass to the Gradle invocation that publishes releases of this project"
         required: false
         type: string
-        default: 'publishToSonatype closeAndReleaseSonatypeStagingRepository'
+        default: "publishToSonatype closeAndReleaseSonatypeStagingRepository"
       gradle_warning_mode:
-        description: 'Warning mode to set on Gradle executions'
+        description: "Warning mode to set on Gradle executions"
         required: false
         type: string
-        default: 'fail'
+        default: "fail"
+      publish:
+        description: "Whether to run the publish tasks for this project."
+        required: false
+        type: boolean
+        default: true
       publish_releases:
-        description: 'Whether to publish releases of this project. The gradle_release_publish_params input must be provided when publishing to anything but Sonatype Central'
+        description: "Whether to publish releases of this project. The gradle_release_publish_params input must be provided when publishing to anything but Sonatype Central"
         required: false
         type: boolean
         default: false
     secrets:
       SONATYPE_USERNAME:
-        description: 'vectrix.space OSSRH Username'
+        description: "vectrix.space OSSRH Username"
         required: false
       SONATYPE_PASSWORD:
-        description: 'vectrix.space OSSRH Password'
+        description: "vectrix.space OSSRH Password"
         required: false
       VECTRIX_GPG_KEY:
-        description: 'vectrix.space GPG signing key'
+        description: "vectrix.space GPG signing key"
         required: false
       VECTRIX_GPG_PASSWORD:
-        description: 'vectrix.space GPG signing password'
+        description: "vectrix.space GPG signing password"
         required: false
 
 concurrency:
@@ -88,7 +93,7 @@ jobs:
             build/reports/
             */build/reports/
       - name: "determine status & prepare for publish"
-        if: "${{ runner.os == 'Linux' }}"
+        if: "${{ inputs.publish && runner.os == 'Linux' }}"
         run: |
           # Disable dependency graph generation after first build, plus for this step itself
           echo "GITHUB_DEPENDENCY_GRAPH_ENABLED=false" >> $GITHUB_ENV
@@ -100,13 +105,13 @@ jobs:
             echo "STATUS=release" >> $GITHUB_ENV
           fi
       - name: "publish snapshot"
-        if: "${{ runner.os == 'Linux' && env.STATUS != 'release' && github.event_name == 'push' && steps.setup.outputs.publishing_branch != '' }}"
+        if: "${{ inputs.publish && runner.os == 'Linux' && env.STATUS != 'release' && github.event_name == 'push' && steps.setup.outputs.publishing_branch != '' }}"
         run: "./gradlew ${{ inputs.extra_gradle_params }} publish ${{ inputs.extra_gradle_publish_params }}"
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
           ORG_GRADLE_PROJECT_sonatypePassword: "${{ secrets.SONATYPE_PASSWORD }}"
       - name: "publish release"
-        if: "${{ inputs.publish_releases && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
+        if: "${{ inputs.publish && inputs.publish_releases && runner.os == 'Linux' && env.STATUS == 'release' && github.event_name == 'release' }}"
         run: "./gradlew ${{ inputs.extra_gradle_params }} ${{ inputs.gradle_release_publish_tasks }} ${{ inputs.extra_gradle_publish_params }}"
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: "${{ secrets.SONATYPE_USERNAME }}"
